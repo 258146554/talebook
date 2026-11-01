@@ -272,7 +272,7 @@ def test_query_allowlist_forwards_all_documented_read_operations_without_seriali
     result = WereadProvider(http=FakeHttp()).query("wrk-unit-test-secret", operation, params)
 
     assert result["errcode"] == 0
-    assert captured["body"] == {"api_name": api_name, "skill_version": "1.0.4", **params}
+    assert captured["body"] == {"api_name": api_name, "skill_version": "1.0.5", **params}
     assert "wrk-unit-test-secret" not in json.dumps(captured["body"])
     assert captured["authorization"] == "Bearer wrk-unit-test-secret"
     assert captured["timeout"] == 30

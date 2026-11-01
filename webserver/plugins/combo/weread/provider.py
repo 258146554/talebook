@@ -15,7 +15,8 @@ from .export import _as_list, _first, parse_weread_export
 
 WEREAD_PLUGIN_KEY = "talebook.combo.weread"
 WEREAD_GATEWAY = "https://i.weread.qq.com/api/agent/gateway"
-WEREAD_SKILL_VERSION = "1.0.4"
+# Keep aligned with Tencent/WeChatReading skills/SKILL.md after reviewing its supporting documents.
+WEREAD_SKILL_VERSION = "1.0.5"
 
 WEREAD_QUERY_OPERATIONS = {
     "search": {
