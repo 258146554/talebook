@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="icon" href="data:," />
+<title>微信读书网关版本对齐 · ACTIVE</title>
+<style>
+/* 基于 design/TEMPLATE.html，保留本文使用的布局、响应式与可访问性基线。 */
+:root { color-scheme: light; --bg:#f6f7fb; --ink:#1f2937; --muted:#5a6475; --line:#d7dfeb; }
+* { box-sizing:border-box; }
+body { margin:0; color:var(--ink); background:var(--bg); font:16px/1.7 system-ui,sans-serif; }
+.page { width:min(1000px,calc(100% - 32px)); margin:auto; padding:24px 0 40px; }
+.hero,.card { margin-bottom:18px; padding:26px; border:1px solid var(--line); border-radius:16px; background:#fff; }
+h1 { font-size:clamp(26px,5vw,40px); line-height:1.2; margin:0 0 16px; }
+h2 { font-size:22px; margin:0 0 12px; }
+p { margin:0 0 12px; }
+.sub { color:var(--muted); }
+.chips { display:flex; flex-wrap:wrap; gap:8px; }
+.chip { padding:4px 10px; border-radius:20px; background:#eef2f7; font-size:13px; }
+.wip,.pending { color:#9a4d0c; }
+.active,.verified { color:#1f7a53; }
+a { color:#315f91; overflow-wrap:anywhere; text-underline-offset:3px; }
+a:focus-visible { outline:3px solid #df6d16; outline-offset:3px; }
+.skip-link { position:fixed; top:8px; left:8px; transform:translateY(-160%); background:#fff; padding:8px; }
+.skip-link:focus { transform:translateY(0); }
+@media(max-width:720px) { .page { width:calc(100% - 20px); padding-top:10px; } .hero,.card { padding:20px; } }
+@media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } }
+@media print { body { background:#fff; } .page { width:100%; } .skip-link { display:none; } }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main-content">跳到正文</a>
+<div class="page">
+<header class="hero">
+<h1>微信读书网关版本对齐</h1>
+<p class="sub">核对官方完整 Skill 后，将 Talebook 的请求版本对齐到 1.0.5，解除旧版本触发的升级要求。</p>
+<div class="chips" aria-label="方案元信息">
+<span class="chip active">状态：ACTIVE</span>
+<span class="chip">创建日期：2026-11-01</span>
+<span class="chip">所属模块：webserver</span>
+<span class="chip">需求来源：开发者反馈微信读书插件升级提示</span>
+</div>
+</header>
+<main id="main-content">
+<section class="card">
+<h2>原始诉求</h2>
+<p>开发者反馈：talebook 的微信阅读插件显示“微信读书 Skill 有新版本，请立即从 upgrade_url 下载最新版 SKILL.md 及子文件替换本地版本，然后重新执行用户请求”。</p>
+<p>本会话没有包含 upgrade_url 的具体值或待重试操作。当前环境也没有已安装的微信读书 Skill 或开发者的 Talebook 实例连接。</p>
+</section>
+<section class="card">
+<h2>目标与边界</h2>
+<p>本次按插件兼容性维护处理：下载官方 SKILL.md 和全部八份子文档，核对现有接口后更新后端请求版本及回归断言。账号凭据、接口参数与导入模型保持现有协议。</p>
+<p>Talebook 通过 Python Provider 直接调用网关，不加载本地 SKILL.md，因此仅替换 Markdown 无法改变插件上报的版本。运行时不自动下载或执行远程文件，也不借用其他读者的凭据。</p>
+</section>
+<section class="card">
+<h2>现状与证据</h2>
+<p>WereadProvider._gateway 固定上报 1.0.4，收到 upgrade_info 时抛出 UpstreamError。腾讯官方 skills/SKILL.md 当前声明 1.0.5。</p>
+<p>协议来源：<a href="https://github.com/Tencent/WeChatReading/tree/d98e66ee60a8c7bcd35da549d0643c4470439643/skills">腾讯官方完整 Skill，固定提交 d98e66ee60a8c7bcd35da549d0643c4470439643</a>。</p>
+<p>与 releasev1.0.4 对比，1.0.5 更新版本字段，并补充 readerLink 和 deepLink 的解释；本插件已有读操作的接口名、鉴权、参数平铺规则没有变化。</p>
+</section>
+<section class="card">
+<h2>方案与决策</h2>
+<ol>
+<li>将 WEREAD_SKILL_VERSION 更新为经过协议核对的 1.0.5，并在常量旁注明官方来源。</li>
+<li>同步现有全部读操作的网关请求回归测试，继续检查参数平铺及凭据只放请求头。</li>
+<li>保留升级阻断行为；未来上游再升级时需要重新核对完整文档，不能忽略升级通知或伪造版本号。</li>
+</ol>
+</section>
+<section class="card">
+<h2>影响范围与风险</h2>
+<p>影响 webserver/plugins/combo/weread/provider.py 、tests/test_weread_plugin.py 及 spec/插件/微信读书.md 的版本维护说明。</p>
+<p>无界面影响：本次只更新后端网关协议版本，不修改页面、布局、交互、前端回包结构或文案。属于版本兼容性维护，豁免大型功能的 interface-review。风险为上游后续升级仍需维护；真实账号验证依赖开发者部署及自己的连接。</p>
+</section>
+<section id="tests" class="card">
+<h2>测试结果</h2>
+<ul>
+<li>使用现有 ghcr.io/talebook/talebook:master 镜像，在临时容器中安装 pytest==7.4.4 与 pytest-cov，挂载当前 checkout 执行测试；未连接开发者的个人账号。</li>
+<li>修复前：python3 -m pytest tests/test_weread_plugin.py -k query_allowlist -x -q，因请求仍上报 1.0.4 而失败，复现版本不一致。</li>
+<li>修复后：python3 -m pytest tests/test_weread_plugin.py tests/test_weread_metadata.py -q，42 passed。</li>
+<li>make lint-py-fix 与 make lint-py 通过，192 个 Python 文件无需额外格式修改。</li>
+<li>make check-spec 通过，25 篇规格文档校验成功；make check-design 通过，178 篇方案文档校验成功。</li>
+<li>下载的 SKILL.md、八份子文档与 LICENSE，全部逐文件通过固定上游提交的 Git blob SHA-1 校验；交付 zip 另附 SOURCE.json 记录来源。</li>
+<li>make pytest：2079 passed、40 skipped、6 failed。六项失败均来自 tests/test_upgrade_release.py，原因是生产镜像没有 git，可定位到 subprocess 的 FileNotFoundError；没有修改发布流程代码。</li>
+<li>为临时测试容器只读挂载 /usr/bin/git 到 /usr/local/bin/git 后，执行 python3 -m pytest tests/test_upgrade_release.py -q：19 passed，包含全部六项失败用例。本轮六项失败均已定向复测通过，全量没有再次重跑。</li>
+</ul>
+<p>真实账号请求未验证：当前没有开发者的实例地址、连接或原始操作。本次只提交源码修复与官方文件包，没有部署或修改任何读者的连接。</p>
+</section>
+</main>
+</div>
+</body>
+</html>
